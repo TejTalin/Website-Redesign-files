@@ -8,7 +8,7 @@ import { FOOTER_LINKS } from '@/lib/site-data.js';
 const SOCIALS = [
   { href: 'https://www.linkedin.com/company/young-legal-house/', icon: 'fa-linkedin',  type: 'fab' },
   { href: 'https://www.instagram.com/younglegalhouse/',          icon: 'fa-instagram', type: 'fab' },
-  { href: 'https://linktr.ee/younglegalhouse',                   icon: 'fa-link',      type: 'fas' },
+  { href: 'https://www.youtube.com/@younglegalhouse',            icon: 'fa-youtube',   type: 'fab' },
   { href: 'mailto:connect.ylh@gmail.com',                        icon: 'fa-envelope',  type: 'fas' },
 ];
 
@@ -19,7 +19,7 @@ export default function Footer() {
         <div className="ylh-footer-grid">
           {/* Brand column */}
           <div className="ylh-footer-brand">
-            <Image src="/logoylh.png" alt="YLH Logo" width={80} height={80} style={{ marginBottom: '16px' }} />
+            <Image src="/logoylh.png" alt="YLH Logo" width={80} height={80} style={{ marginBottom: '8px' }} />
             <p>
               Young Legal House is a pioneering initiative dedicated to empowering law students across India by fostering a dynamic ecosystem of learning, collaboration, and professional development.
             </p>

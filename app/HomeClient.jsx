@@ -1,22 +1,23 @@
 'use client';
 import Link from 'next/link';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
-import AnimatedNetworkBackground from '@/components/AnimatedNetworkBackground';
 import PageWrapper from '@/components/PageWrapper';
 import AnimatedSection from '@/components/AnimatedSection';
 import StaggerGrid from '@/components/StaggerGrid';
 import WordReveal from '@/components/WordReveal';
-import { VIEW } from '@/lib/motion';
-import { INSTAGRAM_INSIGHTS, MOCK_BLOGS, UPCOMING_EVENTS, HOME_FEATURES } from '@/lib/site-data.js';
+import { urlFor } from '@/lib/sanity';
+import { INSTAGRAM_INSIGHTS, HOME_FEATURES } from '@/lib/site-data.js';
 
-// Temporary thumbnail mapping for blogs (until Sanity migration)
-const BLOG_THUMBNAILS = {
-  'fundamental-rights-india': '/design-assets/law-books.jpg',
-  'data-privacy-laws': '/design-assets/emblem-scales.jpg',
-  'corporate-governance': '/design-assets/hero-courthouse.jpg',
-  'criminal-law-reform': '/design-assets/lady-justice.jpg',
-};
+const BLOG_FALLBACK_IMAGE = '/design-assets/law-books.jpg';
+
+function formatEventDay(eventDate) {
+  if (!eventDate) return { day: '--', month: '' };
+  const d = new Date(eventDate);
+  return {
+    day: d.toLocaleDateString('en-IN', { day: '2-digit' }),
+    month: d.toLocaleDateString('en-IN', { month: 'short' }).toUpperCase(),
+  };
+}
 
 const INSIGHT_IMAGES = [
   '/design-assets/home-insight-01.jpg',
@@ -25,17 +26,15 @@ const INSIGHT_IMAGES = [
   '/design-assets/home-insight-04.jpg',
 ];
 
-export default function HomeClient() {
+export default function HomeClient({ recentBlogs = [], upcomingEvents = [] }) {
   return (
     <>
-      <AnimatedNetworkBackground />
-
       <PageWrapper className="ylh-container">
 
         {/* ── HERO ── */}
-        <AnimatedSection variant="fadeUp" className="ylh-hero">
+        <AnimatedSection variant="fadeUp" className="ylh-hero ylh-hero--fullbleed">
           <div className="ylh-hero-grid">
-            <div>
+            <div className="ylh-hero-copy">
               <p className="ylh-hero-label">India&apos;s Elite Law Network</p>
               <WordReveal
                 text="Young Legal House"
@@ -46,16 +45,12 @@ export default function HomeClient() {
                 Bridging legal education, competitions, research, and opportunity.
               </p>
               <div className="ylh-hero-actions">
-                <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}>
-                  <Link href="/join" className="ylh-btn ylh-btn-primary">
-                    Join the Community
-                  </Link>
-                </motion.div>
-                <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}>
-                  <Link href="/blogs" className="ylh-btn ylh-btn-outline">
-                    Explore Insights
-                  </Link>
-                </motion.div>
+                <Link href="/join" className="ylh-btn ylh-btn-primary">
+                  Join the Community
+                </Link>
+                <Link href="/blogs" className="ylh-btn ylh-btn-outline">
+                  Explore Insights
+                </Link>
               </div>
             </div>
             <div className="ylh-hero-image">
@@ -64,6 +59,7 @@ export default function HomeClient() {
                 alt="Young Legal House"
                 fill
                 priority
+                sizes="(max-width: 768px) 100vw, 1200px"
               />
             </div>
           </div>
@@ -89,14 +85,23 @@ export default function HomeClient() {
               {INSTAGRAM_INSIGHTS.map((insight, index) => (
                 <Link key={index} href="/blogs" className="ylh-insight-card">
                   <Image
-                    src={INSIGHT_IMAGES[index] || insight.image}
+                    src={INSIGHT_IMAGES[index]}
                     alt={insight.title}
                     fill
+                    sizes="(max-width: 768px) 50vw, 320px"
                   />
                   <span>{insight.title}</span>
                 </Link>
               ))}
             </StaggerGrid>
+            <Link
+              href="https://www.instagram.com/younglegalhouse/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="ylh-btn ylh-btn-outline ylh-home-column-cta"
+            >
+              Follow us on Instagram →
+            </Link>
           </div>
 
           {/* Recent Blogs */}
@@ -106,22 +111,29 @@ export default function HomeClient() {
               <Link href="/blogs">View all blogs →</Link>
             </div>
             <StaggerGrid>
-              {MOCK_BLOGS.slice(0, 4).map((blog) => (
-                <Link key={blog.slug} href={`/blogs/${blog.slug}`} className="ylh-list-item">
-                  <Image
-                    src={BLOG_THUMBNAILS[blog.slug] || '/design-assets/law-books.jpg'}
-                    alt={blog.title}
-                    width={56}
-                    height={56}
-                    className="ylh-list-thumb"
-                  />
-                  <div>
-                    <div className="ylh-list-meta">{blog.category} · {blog.readTime}</div>
-                    <div className="ylh-list-title">{blog.title}</div>
-                  </div>
-                </Link>
-              ))}
+              {recentBlogs.length === 0 ? (
+                <p style={{ color: 'var(--muted-text)', fontSize: '0.85rem' }}>No published blogs yet.</p>
+              ) : (
+                recentBlogs.map((blog) => (
+                  <Link key={blog._id} href={`/blogs/${blog?.slug?.current || ''}`} className="ylh-list-item">
+                    <Image
+                      src={blog.coverImage ? urlFor(blog.coverImage).width(112).height(112).url() : BLOG_FALLBACK_IMAGE}
+                      alt={blog.title}
+                      width={56}
+                      height={56}
+                      className="ylh-list-thumb"
+                    />
+                    <div>
+                      <div className="ylh-list-meta">{blog.category}{blog.readTime ? ` · ${blog.readTime}` : ''}</div>
+                      <div className="ylh-list-title">{blog.title}</div>
+                    </div>
+                  </Link>
+                ))
+              )}
             </StaggerGrid>
+            <Link href="/blogs" className="ylh-btn ylh-btn-outline ylh-home-column-cta">
+              Explore All Blogs →
+            </Link>
           </div>
 
           {/* Upcoming Events */}
@@ -131,20 +143,31 @@ export default function HomeClient() {
               <Link href="/events">See All Events →</Link>
             </div>
             <StaggerGrid>
-              {UPCOMING_EVENTS.map((event) => (
-                <Link key={event.id} href="/events" className="ylh-event-card">
-                  <div className="ylh-event-date">
-                    <div className="day">{event.date.split(' ')[0]}</div>
-                    <div className="month">{event.date.split(' ')[1]}</div>
-                  </div>
-                  <div>
-                    <div className="ylh-event-tag">{event.category}</div>
-                    <div className="ylh-event-title">{event.title}</div>
-                    <div className="ylh-event-loc">{event.location}</div>
-                  </div>
-                </Link>
-              ))}
+              {upcomingEvents.length === 0 ? (
+                <p style={{ color: 'var(--muted-text)', fontSize: '0.85rem' }}>No upcoming events right now.</p>
+              ) : (
+                upcomingEvents.map((event) => {
+                  const { day, month } = formatEventDay(event.eventDate);
+                  return (
+                    <Link key={event._id} href={`/events/${event?.slug?.current || ''}`} className="ylh-event-card">
+                      <div className="ylh-event-date">
+                        <div className="day">{day}</div>
+                        <div className="month">{month}</div>
+                      </div>
+                      <div>
+                        <div className="ylh-event-tag">{event.eventType}</div>
+                        <div className="ylh-event-title">{event.title}</div>
+                        <div className="ylh-event-loc">{event.location}</div>
+                      </div>
+                      <i className="fas fa-arrow-right ylh-event-arrow" aria-hidden="true" />
+                    </Link>
+                  );
+                })
+              )}
             </StaggerGrid>
+            <Link href="/events" className="ylh-btn ylh-btn-outline ylh-home-column-cta">
+              See All Events →
+            </Link>
           </div>
         </AnimatedSection>
 
@@ -158,11 +181,9 @@ export default function HomeClient() {
             <p>
               Serving as a unified platform for aspiring legal professionals, we bridge the gap between academic pursuits and career advancement through access to internships, training programmes, competitions, events, mentorship, and diverse professional opportunities.
             </p>
-            <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}>
-              <Link href="/about" className="ylh-btn ylh-btn-outline">
-                Know More About Us →
-              </Link>
-            </motion.div>
+            <Link href="/about" className="ylh-btn ylh-btn-outline">
+              Know More About Us →
+            </Link>
           </div>
           <StaggerGrid className="ylh-feature-grid">
             {HOME_FEATURES.map((feature) => (

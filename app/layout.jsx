@@ -3,7 +3,7 @@ import './redesign.css';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import CookieBanner from '@/components/CookieBanner';
-import CursorGlow from '@/components/CursorGlow';
+import ScrollToTop from '@/components/ScrollToTop';
 import { Analytics } from '@vercel/analytics/react';
 
 export const metadata = {
@@ -24,11 +24,24 @@ export default function RootLayout({ children }) {
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
         />
       </head>
-      <body className="dark-mode">
-        <CursorGlow />
+      <body suppressHydrationWarning>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var saved = localStorage.getItem('ylh_theme');
+                  var isDark = saved ? saved === 'dark' : true;
+                  document.body.className = isDark ? 'dark-mode' : 'light-mode';
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
         <Navbar />
         {children}
         <Footer />
+        <ScrollToTop />
         <CookieBanner />
         <Analytics />
       </body>
